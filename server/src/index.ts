@@ -1,0 +1,49 @@
+import "dotenv/config";
+import express, { Request, Response } from "express";
+import cors from "cors";
+import mongoose from "mongoose";
+import { connectDB } from "./config/db";
+import authRoutes from "./routes/auth";
+import transactionRoutes from "./routes/transactions";
+import summaryRoutes from "./routes/summary";
+
+const app = express();
+const PORT = Number(process.env.PORT) || 5001;
+
+app.use(cors());
+app.use(express.json());
+
+app.get("/", (_req: Request, res: Response) => {
+  res.send("Spendly API is running");
+});
+
+app.get("/api/health", (_req: Request, res: Response) => {
+  res.json({
+    status: "ok",
+    app: "Spendly API",
+    database: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+    time: new Date().toISOString(),
+  });
+});
+
+app.use("/api/auth", authRoutes);
+app.use("/api/transactions", transactionRoutes);
+app.use("/api/summary", summaryRoutes);
+
+async function start(): Promise<void> {
+  try {
+    await connectDB();
+    app.listen(PORT, (error?: Error) => {
+      if (error) {
+        console.error(`Could not start server on port ${PORT}:`, error.message);
+        process.exit(1);
+      }
+      console.log(`Spendly API running on http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to start server:", error instanceof Error ? error.message : error);
+    process.exit(1);
+  }
+}
+
+start();
