@@ -1,6 +1,9 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { Link, Navigate } from "react-router-dom";
+import { AnimatePresence, motion } from "motion/react";
+import AuthLayout from "../components/AuthLayout";
+import Field from "../components/Field";
 import { useAuth } from "../context/authContext";
 
 export default function Register() {
@@ -36,72 +39,67 @@ export default function Register() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4 text-white">
-      <div className="w-full max-w-sm rounded-2xl border border-slate-800 bg-slate-900 p-8">
-        <h1 className="text-3xl font-bold">Spendly</h1>
-        <p className="mt-1 text-sm text-slate-400">Create an account to start tracking.</p>
+    <AuthLayout title="Create your account" subtitle="It only takes a minute to get started.">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <Field
+          id="name"
+          label="Name"
+          type="text"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          autoComplete="name"
+          required
+        />
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-          <div>
-            <label htmlFor="name" className="mb-1 block text-sm text-slate-300">
-              Name
-            </label>
-            <input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              required
-              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 outline-none focus:border-emerald-500"
-            />
-          </div>
+        <Field
+          id="email"
+          label="Email"
+          type="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          autoComplete="email"
+          required
+        />
 
-          <div>
-            <label htmlFor="email" className="mb-1 block text-sm text-slate-300">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              required
-              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 outline-none focus:border-emerald-500"
-            />
-          </div>
+        <Field
+          id="password"
+          label="Password"
+          type="password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          autoComplete="new-password"
+          required
+        />
 
-          <div>
-            <label htmlFor="password" className="mb-1 block text-sm text-slate-300">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              required
-              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 outline-none focus:border-emerald-500"
-            />
-          </div>
+        <AnimatePresence>
+          {error && (
+            <motion.p
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden text-sm text-expense"
+            >
+              {error}
+            </motion.p>
+          )}
+        </AnimatePresence>
 
-          {error && <p className="text-sm text-red-400">{error}</p>}
+        <motion.button
+          whileTap={{ scale: 0.98 }}
+          type="submit"
+          disabled={submitting}
+          className="w-full rounded-xl bg-accent py-3 font-semibold text-accent-ink transition hover:opacity-90 disabled:opacity-60"
+        >
+          {submitting ? "Creating account..." : "Create account"}
+        </motion.button>
+      </form>
 
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full rounded-lg bg-emerald-500 py-2 font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:opacity-60"
-          >
-            {submitting ? "Creating account..." : "Create account"}
-          </button>
-        </form>
-
-        <p className="mt-6 text-center text-sm text-slate-400">
-          Already have an account?{" "}
-          <Link to="/login" className="text-emerald-400 hover:underline">
-            Log in
-          </Link>
-        </p>
-      </div>
-    </div>
+      <p className="mt-8 text-center text-sm text-muted">
+        Already have an account?{" "}
+        <Link to="/login" className="font-medium text-accent hover:underline">
+          Log in
+        </Link>
+      </p>
+    </AuthLayout>
   );
 }

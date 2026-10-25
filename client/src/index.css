@@ -1,1 +1,74 @@
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #faf8f5;
+  --surface: #ffffff;
+  --surface-muted: #f3efe9;
+  --ink: #14141a;
+  --muted: #6b6b76;
+  --border: #ece8e1;
+  --income: #0f6b4f;
+  --expense: #d9593d;
+  --accent: #0f6b4f;
+  --accent-ink: #ffffff;
+  --brand: #0f3d30;
+  --brand-ink: #f4f2ee;
+  color-scheme: light;
+}
+
+.dark {
+  --background: #0e0e12;
+  --surface: #17171d;
+  --surface-muted: #1f1f27;
+  --ink: #f4f2ee;
+  --muted: #9a9aa6;
+  --border: #2a2a33;
+  --income: #3ecf9b;
+  --expense: #ff7a5c;
+  --accent: #3ecf9b;
+  --accent-ink: #0e0e12;
+  --brand: #12261f;
+  --brand-ink: #f4f2ee;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-income: var(--income);
+  --color-expense: var(--expense);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-brand: var(--brand);
+  --color-brand-ink: var(--brand-ink);
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Instrument Serif", ui-serif, Georgia, serif;
+}
+
+body {
+  margin: 0;
+  background-color: var(--background);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
