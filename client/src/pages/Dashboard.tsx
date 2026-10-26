@@ -1,11 +1,14 @@
 import { useMemo, useState } from "react";
 import { motion } from "motion/react";
+import CategoryChart from "../components/CategoryChart";
 import CurrencySelect from "../components/CurrencySelect";
 import DateFilter from "../components/DateFilter";
 import SummaryCards from "../components/SummaryCards";
 import ThemeToggle from "../components/ThemeToggle";
+import TransactionList from "../components/TransactionList";
 import { useAuth } from "../context/authContext";
 import { useSummary } from "../hooks/useSummary";
+import { useTransactions } from "../hooks/useTransactions";
 import { getRange } from "../lib/dates";
 import type { RangePreset } from "../lib/dates";
 
@@ -28,6 +31,12 @@ export default function Dashboard() {
   );
 
   const { summary, loading, error } = useSummary(range);
+  const {
+    transactions,
+    loading: transactionsLoading,
+    hasLoaded,
+    error: transactionsError,
+  } = useTransactions(range);
   const firstName = user?.name.split(" ")[0] ?? "";
 
   return (
@@ -67,11 +76,25 @@ export default function Dashboard() {
           onCustomToChange={setCustomTo}
         />
 
-        {error && <p className="text-sm text-expense">{error}</p>}
+        {(error || transactionsError) && (
+          <p className="text-sm text-expense">{error || transactionsError}</p>
+        )}
 
         <SummaryCards summary={summary} loading={loading} />
 
-        <p className="text-sm text-muted">The chart and your transactions are coming next.</p>
+        <div className="grid items-start gap-4 lg:grid-cols-5">
+          <div className="lg:col-span-2">
+            <CategoryChart summary={summary} loading={loading} />
+          </div>
+
+          <div className="lg:col-span-3">
+            <TransactionList
+              transactions={transactions}
+              loading={transactionsLoading}
+              hasLoaded={hasLoaded}
+            />
+          </div>
+        </div>
       </main>
     </div>
   );
