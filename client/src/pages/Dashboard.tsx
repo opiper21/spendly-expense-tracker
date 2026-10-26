@@ -1,11 +1,13 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { motion } from "motion/react";
+import { Plus } from "lucide-react";
 import CategoryChart from "../components/CategoryChart";
 import CurrencySelect from "../components/CurrencySelect";
 import DateFilter from "../components/DateFilter";
 import SummaryCards from "../components/SummaryCards";
 import ThemeToggle from "../components/ThemeToggle";
 import TransactionList from "../components/TransactionList";
+import TransactionModal from "../components/TransactionModal";
 import { useAuth } from "../context/authContext";
 import { useSummary } from "../hooks/useSummary";
 import { useTransactions } from "../hooks/useTransactions";
@@ -24,20 +26,28 @@ export default function Dashboard() {
   const [preset, setPreset] = useState<RangePreset>("month");
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const range = useMemo(
     () => getRange(preset, customFrom, customTo),
     [preset, customFrom, customTo]
   );
 
-  const { summary, loading, error } = useSummary(range);
+  const { summary, loading, error } = useSummary(range, refreshKey);
   const {
     transactions,
     loading: transactionsLoading,
     hasLoaded,
     error: transactionsError,
-  } = useTransactions(range);
+  } = useTransactions(range, refreshKey);
   const firstName = user?.name.split(" ")[0] ?? "";
+
+  const handleClose = useCallback(() => setModalOpen(false), []);
+  const handleSaved = useCallback(() => {
+    setModalOpen(false);
+    setRefreshKey((key) => key + 1);
+  }, []);
 
   return (
     <div className="min-h-screen bg-background text-ink">
@@ -56,16 +66,28 @@ export default function Dashboard() {
       </header>
 
       <main className="mx-auto max-w-6xl space-y-8 px-6 py-10">
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <h2 className="font-display text-4xl sm:text-5xl">
-            {getGreeting()}, {firstName}
-          </h2>
-          <p className="mt-2 text-muted">Here is where your money stands.</p>
-        </motion.div>
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <h2 className="font-display text-4xl sm:text-5xl">
+              {getGreeting()}, {firstName}
+            </h2>
+            <p className="mt-2 text-muted">Here is where your money stands.</p>
+          </motion.div>
+
+          <motion.button
+            type="button"
+            onClick={() => setModalOpen(true)}
+            whileTap={{ scale: 0.97 }}
+            className="flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-accent-ink transition hover:opacity-90"
+          >
+            <Plus size={18} />
+            Add transaction
+          </motion.button>
+        </div>
 
         <DateFilter
           preset={preset}
@@ -96,6 +118,13 @@ export default function Dashboard() {
           </div>
         </div>
       </main>
+
+      <TransactionModal
+        open={modalOpen}
+        transaction={null}
+        onClose={handleClose}
+        onSaved={handleSaved}
+      />
     </div>
   );
 }
