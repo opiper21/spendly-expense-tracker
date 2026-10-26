@@ -13,6 +13,7 @@ import { useSummary } from "../hooks/useSummary";
 import { useTransactions } from "../hooks/useTransactions";
 import { getRange } from "../lib/dates";
 import type { RangePreset } from "../lib/dates";
+import type { Transaction } from "../types";
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -27,6 +28,7 @@ export default function Dashboard() {
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
+  const [editing, setEditing] = useState<Transaction | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const range = useMemo(
@@ -43,7 +45,20 @@ export default function Dashboard() {
   } = useTransactions(range, refreshKey);
   const firstName = user?.name.split(" ")[0] ?? "";
 
+  const handleAdd = useCallback(() => {
+    setEditing(null);
+    setModalOpen(true);
+  }, []);
+
+  const handleEdit = useCallback((transaction: Transaction) => {
+    setEditing(transaction);
+    setModalOpen(true);
+  }, []);
+
   const handleClose = useCallback(() => setModalOpen(false), []);
+
+  const handleChanged = useCallback(() => setRefreshKey((key) => key + 1), []);
+
   const handleSaved = useCallback(() => {
     setModalOpen(false);
     setRefreshKey((key) => key + 1);
@@ -80,7 +95,7 @@ export default function Dashboard() {
 
           <motion.button
             type="button"
-            onClick={() => setModalOpen(true)}
+            onClick={handleAdd}
             whileTap={{ scale: 0.97 }}
             className="flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-accent-ink transition hover:opacity-90"
           >
@@ -114,6 +129,8 @@ export default function Dashboard() {
               transactions={transactions}
               loading={transactionsLoading}
               hasLoaded={hasLoaded}
+              onEdit={handleEdit}
+              onChanged={handleChanged}
             />
           </div>
         </div>
@@ -121,7 +138,7 @@ export default function Dashboard() {
 
       <TransactionModal
         open={modalOpen}
-        transaction={null}
+        transaction={editing}
         onClose={handleClose}
         onSaved={handleSaved}
       />

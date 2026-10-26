@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowDownLeft, ArrowUpRight, Receipt } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Pencil, Receipt, Trash2 } from "lucide-react";
 import { useCurrency } from "../context/currencyContext";
+import { api } from "../lib/api";
 import { formatDate } from "../lib/dates";
 import type { Transaction } from "../types";
 
@@ -17,6 +18,8 @@ interface TransactionListProps {
   transactions: Transaction[];
   loading: boolean;
   hasLoaded: boolean;
+  onEdit: (transaction: Transaction) => void;
+  onChanged: () => void;
 }
 
 function SkeletonRow() {
@@ -32,14 +35,38 @@ function SkeletonRow() {
   );
 }
 
-export default function TransactionList({ transactions, loading, hasLoaded }: TransactionListProps) {
+export default function TransactionList({
+  transactions,
+  loading,
+  hasLoaded,
+  onEdit,
+  onChanged,
+}: TransactionListProps) {
   const { format } = useCurrency();
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState("");
 
   const visible =
     typeFilter === "all"
       ? transactions
       : transactions.filter((item) => item.type === typeFilter);
+
+  async function handleDelete(id: string) {
+    setActionError("");
+    setDeletingId(id);
+
+    try {
+      await api(`/transactions/${id}`, { method: "DELETE" });
+      onChanged();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Could not delete the transaction");
+    } finally {
+      setDeletingId(null);
+      setConfirmingId(null);
+    }
+  }
 
   return (
     <motion.section
@@ -85,6 +112,8 @@ export default function TransactionList({ transactions, loading, hasLoaded }: Tr
         </div>
       </div>
 
+      {actionError && <p className="mt-3 text-sm text-expense">{actionError}</p>}
+
       <div className="mt-4 max-h-[36rem] overflow-y-auto">
         {!hasLoaded ? (
           <div>
@@ -108,6 +137,8 @@ export default function TransactionList({ transactions, loading, hasLoaded }: Tr
             <AnimatePresence mode="popLayout">
               {visible.map((item, index) => {
                 const isIncome = item.type === "income";
+                const confirming = confirmingId === item._id;
+                const deleting = deletingId === item._id;
 
                 return (
                   <motion.li
@@ -115,9 +146,9 @@ export default function TransactionList({ transactions, loading, hasLoaded }: Tr
                     layout="position"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, x: -16 }}
+                    exit={{ opacity: 0, x: -24 }}
                     transition={{ duration: 0.3, delay: Math.min(index, 10) * 0.03 }}
-                    className="flex items-center gap-4 rounded-xl px-3 py-3 transition-colors hover:bg-surface-muted"
+                    className="group flex items-center gap-4 rounded-xl px-3 py-3 transition-colors hover:bg-surface-muted"
                   >
                     <span
                       className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
@@ -135,14 +166,57 @@ export default function TransactionList({ transactions, loading, hasLoaded }: Tr
                       </p>
                     </div>
 
-                    <p
-                      className={`shrink-0 font-medium tabular-nums ${
-                        isIncome ? "text-income" : "text-ink"
-                      }`}
-                    >
-                      {isIncome ? "+" : "-"}
-                      {format(item.amount)}
-                    </p>
+                    {confirming ? (
+                      <div className="flex shrink-0 items-center gap-2">
+                        <span className="hidden text-sm text-muted sm:inline">Delete?</span>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmingId(null)}
+                          disabled={deleting}
+                          className="rounded-full border border-border px-3 py-1 text-sm font-medium text-muted transition hover:text-ink"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(item._id)}
+                          disabled={deleting}
+                          className="rounded-full bg-expense px-3 py-1 text-sm font-semibold text-accent-ink transition hover:opacity-90 disabled:opacity-60"
+                        >
+                          {deleting ? "Deleting..." : "Delete"}
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <p
+                          className={`shrink-0 font-medium tabular-nums ${
+                            isIncome ? "text-income" : "text-ink"
+                          }`}
+                        >
+                          {isIncome ? "+" : "-"}
+                          {format(item.amount)}
+                        </p>
+
+                        <div className="flex shrink-0 items-center gap-1 transition-opacity [@media(hover:hover)]:opacity-0 group-hover:opacity-100 group-focus-within:opacity-100">
+                          <button
+                            type="button"
+                            onClick={() => onEdit(item)}
+                            aria-label="Edit transaction"
+                            className="flex h-8 w-8 items-center justify-center rounded-full text-muted transition hover:bg-background hover:text-ink"
+                          >
+                            <Pencil size={15} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setConfirmingId(item._id)}
+                            aria-label="Delete transaction"
+                            className="flex h-8 w-8 items-center justify-center rounded-full text-muted transition hover:bg-background hover:text-expense"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </motion.li>
                 );
               })}
