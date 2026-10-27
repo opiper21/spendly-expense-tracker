@@ -10,7 +10,20 @@ import summaryRoutes from "./routes/summary";
 const app = express();
 const PORT = Number(process.env.PORT) || 5001;
 
-app.use(cors());
+const allowedOrigins = (process.env.CLIENT_URL ?? "")
+  .split(",")
+  .map((origin) => origin.trim().replace(/\/$/, ""))
+  .filter(Boolean);
+
+if (process.env.NODE_ENV === "production" && allowedOrigins.length === 0) {
+  console.warn("CLIENT_URL is not set, so the API accepts requests from any origin");
+}
+
+app.use(
+  cors({
+    origin: allowedOrigins.length > 0 ? allowedOrigins : true,
+  })
+);
 app.use(express.json());
 
 app.get("/", (_req: Request, res: Response) => {
