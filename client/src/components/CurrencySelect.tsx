@@ -100,7 +100,7 @@ export default function CurrencySelect() {
   }
 
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} className="sm:relative">
       <button
         ref={triggerRef}
         type="button"
@@ -140,7 +140,7 @@ export default function CurrencySelect() {
             exit={{ opacity: 0, y: -8, scale: 0.97 }}
             transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
             style={{ transformOrigin: "top right" }}
-            className="absolute right-0 z-40 mt-2 w-64 rounded-2xl border border-border bg-surface p-1.5 shadow-xl outline-none"
+            className="absolute left-4 right-4 top-full z-40 mt-2 rounded-2xl border border-border bg-surface p-1.5 shadow-xl outline-none sm:left-auto sm:right-0 sm:w-64"
           >
             {currencies.map((item, index) => {
               const selected = item.code === currency;

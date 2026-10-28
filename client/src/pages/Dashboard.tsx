@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { motion } from "motion/react";
-import { Plus } from "lucide-react";
+import { LogOut, Plus } from "lucide-react";
 import CategoryChart from "../components/CategoryChart";
 import CurrencySelect from "../components/CurrencySelect";
 import DateFilter from "../components/DateFilter";
@@ -67,21 +67,24 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background text-ink">
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background/85 px-6 py-4 backdrop-blur">
-        <h1 className="font-display text-3xl">Spendly</h1>
-        <div className="flex items-center gap-3">
+      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background/85 px-4 py-3 backdrop-blur sm:px-6 sm:py-4">
+        <h1 className="font-display text-2xl sm:text-3xl">Spendly</h1>
+        <div className="flex items-center gap-2 sm:gap-3">
           <CurrencySelect />
           <ThemeToggle />
           <button
+            type="button"
             onClick={logout}
-            className="rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium transition hover:bg-surface-muted"
+            aria-label="Log out"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-surface text-sm font-medium transition hover:bg-surface-muted sm:w-auto sm:px-4"
           >
-            Log out
+            <LogOut size={16} className="sm:hidden" />
+            <span className="hidden whitespace-nowrap sm:inline">Log out</span>
           </button>
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl space-y-8 px-6 py-10">
+      <main className="mx-auto max-w-6xl space-y-8 px-4 py-8 sm:px-6 sm:py-10">
         {user?.isDemo && <DemoBanner />}
 
         <div className="flex flex-wrap items-end justify-between gap-4">
