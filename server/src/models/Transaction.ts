@@ -9,6 +9,7 @@ export interface ITransaction extends Document {
   category: string;
   date: Date;
   note: string;
+  expiresAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -21,6 +22,7 @@ const transactionSchema = new Schema<ITransaction>(
     category: { type: String, required: true, trim: true },
     date: { type: Date, required: true, default: Date.now },
     note: { type: String, trim: true, maxlength: 200, default: "" },
+    expiresAt: { type: Date, index: { expireAfterSeconds: 0 } },
   },
   { timestamps: true }
 );

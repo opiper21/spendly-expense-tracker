@@ -10,6 +10,8 @@ import summaryRoutes from "./routes/summary";
 const app = express();
 const PORT = Number(process.env.PORT) || 5001;
 
+app.set("trust proxy", 1);
+
 const allowedOrigins = (process.env.CLIENT_URL ?? "")
   .split(",")
   .map((origin) => origin.trim().replace(/\/$/, ""))

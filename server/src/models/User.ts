@@ -4,6 +4,8 @@ export interface IUser extends Document {
   name: string;
   email: string;
   password: string;
+  isDemo: boolean;
+  expiresAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -19,6 +21,8 @@ const userSchema = new Schema<IUser>(
       trim: true,
     },
     password: { type: String, required: true, minlength: 6 },
+    isDemo: { type: Boolean, default: false },
+    expiresAt: { type: Date, index: { expireAfterSeconds: 0 } },
   },
   { timestamps: true }
 );
