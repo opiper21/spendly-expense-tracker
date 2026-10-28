@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
 import AuthLayout from "../components/AuthLayout";
+import DemoButton from "../components/DemoButton";
 import Field from "../components/Field";
 import { useAuth } from "../context/authContext";
 
@@ -93,6 +94,8 @@ export default function Register() {
           {submitting ? "Creating account..." : "Create account"}
         </motion.button>
       </form>
+
+      <DemoButton />
 
       <p className="mt-8 text-center text-sm text-muted">
         Already have an account?{" "}

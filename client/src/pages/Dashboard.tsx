@@ -4,6 +4,7 @@ import { Plus } from "lucide-react";
 import CategoryChart from "../components/CategoryChart";
 import CurrencySelect from "../components/CurrencySelect";
 import DateFilter from "../components/DateFilter";
+import DemoBanner from "../components/DemoBanner";
 import SummaryCards from "../components/SummaryCards";
 import ThemeToggle from "../components/ThemeToggle";
 import TransactionList from "../components/TransactionList";
@@ -24,7 +25,7 @@ function getGreeting(): string {
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
-  const [preset, setPreset] = useState<RangePreset>("month");
+  const [preset, setPreset] = useState<RangePreset>(user?.isDemo ? "30d" : "month");
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
@@ -81,6 +82,8 @@ export default function Dashboard() {
       </header>
 
       <main className="mx-auto max-w-6xl space-y-8 px-6 py-10">
+        {user?.isDemo && <DemoBanner />}
+
         <div className="flex flex-wrap items-end justify-between gap-4">
           <motion.div
             initial={{ opacity: 0, y: 12 }}

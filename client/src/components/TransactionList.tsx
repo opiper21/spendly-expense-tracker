@@ -114,7 +114,7 @@ export default function TransactionList({
 
       {actionError && <p className="mt-3 text-sm text-expense">{actionError}</p>}
 
-      <div className="mt-4 max-h-[36rem] overflow-y-auto">
+      <div className="mt-4 max-h-144 overflow-y-auto">
         {!hasLoaded ? (
           <div>
             <SkeletonRow />
