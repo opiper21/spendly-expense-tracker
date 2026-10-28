@@ -81,7 +81,9 @@ export default function TransactionList({
         <div>
           <h3 className="text-sm font-medium text-muted">Transactions</h3>
           <p className="mt-0.5 text-xs text-muted">
-            {visible.length} {visible.length === 1 ? "entry" : "entries"}
+            {hasLoaded
+              ? `${visible.length} ${visible.length === 1 ? "entry" : "entries"}`
+              : "Loading..."}
           </p>
         </div>
 
@@ -114,7 +116,7 @@ export default function TransactionList({
 
       {actionError && <p className="mt-3 text-sm text-expense">{actionError}</p>}
 
-      <div className="mt-4 max-h-144 overflow-y-auto">
+      <div className="mt-4 max-h-[36rem] overflow-y-auto">
         {!hasLoaded ? (
           <div>
             <SkeletonRow />
@@ -148,7 +150,7 @@ export default function TransactionList({
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, x: -24 }}
                     transition={{ duration: 0.3, delay: Math.min(index, 10) * 0.03 }}
-                    className="group flex items-center gap-4 rounded-xl px-3 py-3 transition-colors hover:bg-surface-muted"
+                    className="group flex items-center gap-3 rounded-xl px-2 py-3 transition-colors hover:bg-surface-muted sm:gap-4 sm:px-3"
                   >
                     <span
                       className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
@@ -164,6 +166,25 @@ export default function TransactionList({
                         {formatDate(item.date)}
                         {item.note ? ` · ${item.note}` : ""}
                       </p>
+
+                      {!confirming && (
+                        <div className="mt-1 flex items-center gap-4 text-xs font-medium text-muted sm:hidden">
+                          <button
+                            type="button"
+                            onClick={() => onEdit(item)}
+                            className="transition hover:text-ink"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setConfirmingId(item._id)}
+                            className="transition hover:text-expense"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
                     </div>
 
                     {confirming ? (
@@ -189,7 +210,7 @@ export default function TransactionList({
                     ) : (
                       <>
                         <p
-                          className={`shrink-0 font-medium tabular-nums ${
+                          className={`shrink-0 text-sm font-medium tabular-nums sm:text-base ${
                             isIncome ? "text-income" : "text-ink"
                           }`}
                         >
@@ -197,7 +218,7 @@ export default function TransactionList({
                           {format(item.amount)}
                         </p>
 
-                        <div className="flex shrink-0 items-center gap-1 transition-opacity [@media(hover:hover)]:opacity-0 group-hover:opacity-100 group-focus-within:opacity-100">
+                        <div className="hidden shrink-0 items-center gap-1 transition-opacity sm:flex [@media(hover:hover)]:opacity-0 group-hover:opacity-100 group-focus-within:opacity-100">
                           <button
                             type="button"
                             onClick={() => onEdit(item)}

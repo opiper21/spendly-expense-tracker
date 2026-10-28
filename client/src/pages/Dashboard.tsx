@@ -67,7 +67,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background text-ink">
-      <header className="flex items-center justify-between border-b border-border px-6 py-4">
+      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background/85 px-6 py-4 backdrop-blur">
         <h1 className="font-display text-3xl">Spendly</h1>
         <div className="flex items-center gap-3">
           <CurrencySelect />
@@ -122,12 +122,12 @@ export default function Dashboard() {
 
         <SummaryCards summary={summary} loading={loading} />
 
-        <div className="grid items-start gap-4 lg:grid-cols-5">
-          <div className="lg:col-span-2">
+        <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-5">
+          <div className="min-w-0 lg:col-span-2">
             <CategoryChart summary={summary} loading={loading} />
           </div>
 
-          <div className="lg:col-span-3">
+          <div className="min-w-0 lg:col-span-3">
             <TransactionList
               transactions={transactions}
               loading={transactionsLoading}

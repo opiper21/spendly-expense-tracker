@@ -25,7 +25,7 @@ function Card({ index, label, icon, iconClass, value, valueClass, caption, large
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
       whileHover={{ y: -2 }}
-      className="rounded-2xl border border-border bg-surface p-6"
+      className="min-w-0 rounded-2xl border border-border bg-surface p-6"
     >
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-muted">{label}</p>
@@ -33,7 +33,9 @@ function Card({ index, label, icon, iconClass, value, valueClass, caption, large
           {icon}
         </span>
       </div>
-      <p className={`mt-4 font-display ${large ? "text-5xl" : "text-4xl"} ${valueClass}`}>
+      <p
+        className={`mt-4 break-words font-display ${large ? "text-4xl sm:text-5xl" : "text-4xl"} ${valueClass}`}
+      >
         <AnimatedNumber value={value} format={format} />
       </p>
       <p className="mt-2 text-sm text-muted">{caption}</p>
@@ -61,7 +63,7 @@ export default function SummaryCards({ summary, loading }: SummaryCardsProps) {
     if (!loading) return null;
 
     return (
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <SkeletonCard />
         <SkeletonCard />
         <SkeletonCard />
@@ -73,7 +75,9 @@ export default function SummaryCards({ summary, loading }: SummaryCardsProps) {
 
   return (
     <div
-      className={`grid gap-4 transition-opacity md:grid-cols-3 ${loading ? "opacity-60" : "opacity-100"}`}
+      className={`grid grid-cols-1 gap-4 transition-opacity md:grid-cols-3 ${
+        loading ? "opacity-60" : "opacity-100"
+      }`}
     >
       <Card
         index={0}
