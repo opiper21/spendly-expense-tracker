@@ -4,6 +4,8 @@ Spendly is a full-stack expense and budget tracker. Log your income and spending
 
 **Live demo:** https://spendly-expense-tracker-delta.vercel.app
 
+**Want a quick look?** Open the link and click **Try the demo**. It gives you a private dashboard full of sample data in one click, with no sign-up.
+
 > The API runs on a free hosting tier, so the first request after a quiet period can take up to a minute while the server wakes up.
 
 ![Spendly dashboard in light mode](docs/dashboard-light.png)
@@ -12,6 +14,7 @@ Spendly is a full-stack expense and budget tracker. Log your income and spending
 
 ## Features
 
+- One-click demo: every visitor gets a private account with 36 sample transactions, which deletes itself after 24 hours
 - Sign up and log in with hashed passwords and JWT authentication
 - Add, edit and delete income and expense transactions (amount, category, date, note)
 - Summary of balance, total income, total expenses and spending by category
@@ -37,6 +40,7 @@ Spendly is a full-stack expense and budget tracker. Log your income and spending
 2. The React app keeps the token and sends it with every request.
 3. A middleware verifies the token and every query is filtered by the user's id, so people only ever see their own data.
 4. The summary endpoint adds up income and expenses in the database with an aggregation, and the dashboard animates the results.
+5. Demo accounts are created on request with sample data and an expiry time. A MongoDB TTL index removes them after 24 hours, and the demo endpoint is rate limited per IP.
 
 ## API
 
@@ -44,6 +48,7 @@ Spendly is a full-stack expense and budget tracker. Log your income and spending
 |---|---|---|
 | POST | `/api/auth/register` | Create an account |
 | POST | `/api/auth/login` | Log in |
+| POST | `/api/auth/demo` | Start a private, self-expiring demo account |
 | GET | `/api/auth/me` | Get the current user |
 | GET | `/api/transactions` | List transactions (`from`, `to`, `type` filters) |
 | POST | `/api/transactions` | Add a transaction |
@@ -52,7 +57,7 @@ Spendly is a full-stack expense and budget tracker. Log your income and spending
 | GET | `/api/summary` | Balance, income, expenses and spending by category (`from`, `to` filters) |
 | GET | `/api/health` | Health check |
 
-All routes except register, login and health require a `Bearer` token.
+All routes except register, login, demo and health require a `Bearer` token.
 
 ## Run it locally
 
@@ -99,10 +104,10 @@ spendly/
 
 ## Roadmap
 
-- Demo account so visitors can try the app without signing up
+- Forgot password and email confirmation on signup
 - Budgets per category and recurring transactions
 - CSV import and export
-- httpOnly cookie sessions, rate limiting and security headers
+- httpOnly cookie sessions and security headers
 - Automated tests
 
 ## Author
