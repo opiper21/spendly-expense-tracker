@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "motion/react";
 import ThemeToggle from "./ThemeToggle";
 
@@ -71,6 +72,12 @@ export default function AuthLayout({ title, subtitle, children }: AuthLayoutProp
           <h1 className="font-display text-4xl">{title}</h1>
           <p className="mt-2 text-sm text-muted">{subtitle}</p>
           <div className="mt-8">{children}</div>
+
+          <div className="mt-6 text-center text-xs text-muted">
+            <Link to="/privacy" className="transition hover:text-ink">
+              Privacy
+            </Link>
+          </div>
         </motion.div>
       </div>
     </div>

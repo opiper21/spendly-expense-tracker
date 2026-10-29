@@ -4,6 +4,7 @@ import cors from "cors";
 import helmet from "helmet";
 import mongoose from "mongoose";
 import { connectDB } from "./config/db";
+import accountRoutes from "./routes/account";
 import authRoutes from "./routes/auth";
 import transactionRoutes from "./routes/transactions";
 import summaryRoutes from "./routes/summary";
@@ -44,6 +45,7 @@ app.get("/api/health", (_req: Request, res: Response) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/account", accountRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/summary", summaryRoutes);
 

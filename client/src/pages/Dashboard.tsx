@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { motion } from "motion/react";
 import { LogOut, Plus } from "lucide-react";
+import AppFooter from "../components/AppFooter";
 import CategoryChart from "../components/CategoryChart";
 import CurrencySelect from "../components/CurrencySelect";
 import DateFilter from "../components/DateFilter";
@@ -141,6 +142,8 @@ export default function Dashboard() {
           </div>
         </div>
       </main>
+
+      <AppFooter />
 
       <TransactionModal
         open={modalOpen}
