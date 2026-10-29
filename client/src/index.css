@@ -72,3 +72,8 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
+}
