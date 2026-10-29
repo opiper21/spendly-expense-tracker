@@ -22,6 +22,23 @@ const demoLimiter = rateLimit({
   message: { message: "Too many demo sessions from this network. Please try again later." },
 });
 
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  skipSuccessfulRequests: true,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: { message: "Too many failed login attempts. Please try again in 15 minutes." },
+});
+
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 20,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: { message: "Too many sign-ups from this network. Please try again later." },
+});
+
 function signToken(userId: string): string {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
@@ -39,7 +56,7 @@ function toPublicUser(user: HydratedDocument<IUser>) {
   };
 }
 
-router.post("/register", async (req: Request, res: Response) => {
+router.post("/register", registerLimiter, async (req: Request, res: Response) => {
   try {
     const { name, email, password } = (req.body ?? {}) as {
       name?: string;
@@ -74,7 +91,7 @@ router.post("/register", async (req: Request, res: Response) => {
   }
 });
 
-router.post("/login", async (req: Request, res: Response) => {
+router.post("/login", loginLimiter, async (req: Request, res: Response) => {
   try {
     const { email, password } = (req.body ?? {}) as {
       email?: string;
