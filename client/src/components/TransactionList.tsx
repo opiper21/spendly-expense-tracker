@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowDownLeft, ArrowUpRight, Pencil, Receipt, Trash2 } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Pencil, Receipt, Repeat, Trash2 } from "lucide-react";
 import { useCurrency } from "../context/currencyContext";
 import { api } from "../lib/api";
 import { formatDate } from "../lib/dates";
@@ -161,7 +161,18 @@ export default function TransactionList({
                     </span>
 
                     <div className="min-w-0 flex-1">
-                      <p className="truncate font-medium">{item.category}</p>
+                      <p className="flex items-center gap-1.5 font-medium">
+                        <span className="truncate">{item.category}</span>
+                        {item.recurringId && (
+                          <span
+                            title="Added automatically by a repeating transaction"
+                            className="shrink-0 text-muted"
+                          >
+                            <Repeat size={13} aria-hidden="true" />
+                            <span className="sr-only">Repeating</span>
+                          </span>
+                        )}
+                      </p>
                       <p className="truncate text-sm text-muted">
                         {formatDate(item.date)}
                         {item.note ? ` · ${item.note}` : ""}

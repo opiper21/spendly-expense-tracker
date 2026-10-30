@@ -5,6 +5,7 @@ import Account from "./pages/Account";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Privacy from "./pages/Privacy";
+import Recurring from "./pages/Recurring";
 import Register from "./pages/Register";
 
 export default function App() {
@@ -17,6 +18,7 @@ export default function App() {
         <Route path="/privacy" element={<Privacy />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/recurring" element={<Recurring />} />
           <Route path="/account" element={<Account />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

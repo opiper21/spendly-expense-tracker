@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
-import { LogOut, Plus } from "lucide-react";
+import { LogOut, Plus, Repeat } from "lucide-react";
 import AppFooter from "../components/AppFooter";
 import CategoryChart from "../components/CategoryChart";
 import CurrencySelect from "../components/CurrencySelect";
@@ -115,15 +115,25 @@ export default function Dashboard() {
             <p className="mt-2 text-muted">Here is where your money stands.</p>
           </motion.div>
 
-          <motion.button
-            type="button"
-            onClick={handleAdd}
-            whileTap={{ scale: 0.97 }}
-            className="flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-accent-ink transition hover:opacity-90"
-          >
-            <Plus size={18} />
-            Add transaction
-          </motion.button>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              to="/recurring"
+              className="flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2.5 text-sm font-medium transition hover:bg-surface-muted"
+            >
+              <Repeat size={16} />
+              Repeating
+            </Link>
+
+            <motion.button
+              type="button"
+              onClick={handleAdd}
+              whileTap={{ scale: 0.97 }}
+              className="flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-accent-ink transition hover:opacity-90"
+            >
+              <Plus size={18} />
+              Add transaction
+            </motion.button>
+          </div>
         </div>
 
         <DateFilter

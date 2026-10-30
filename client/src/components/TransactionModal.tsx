@@ -6,7 +6,7 @@ import Field from "./Field";
 import { useCurrency } from "../context/currencyContext";
 import { api } from "../lib/api";
 import { toISODate } from "../lib/dates";
-import type { Transaction, TransactionType } from "../types";
+import type { RecurringFrequency, Transaction, TransactionType } from "../types";
 
 const expenseCategories = [
   "Food",
@@ -27,6 +27,14 @@ const typeOptions: { key: TransactionType; label: string }[] = [
   { key: "income", label: "Income" },
 ];
 
+type RepeatOption = "none" | RecurringFrequency;
+
+const repeatOptions: { key: RepeatOption; label: string }[] = [
+  { key: "none", label: "Never" },
+  { key: "weekly", label: "Weekly" },
+  { key: "monthly", label: "Monthly" },
+];
+
 interface ModalContentProps {
   transaction: Transaction | null;
   onClose: () => void;
@@ -44,6 +52,7 @@ function ModalContent({ transaction, onClose, onSaved }: ModalContentProps) {
     transaction ? transaction.date.slice(0, 10) : toISODate(new Date())
   );
   const [note, setNote] = useState(transaction?.note ?? "");
+  const [repeat, setRepeat] = useState<RepeatOption>("none");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -85,18 +94,31 @@ function ModalContent({ transaction, onClose, onSaved }: ModalContentProps) {
     setSubmitting(true);
 
     try {
-      const body = {
-        type,
-        amount: parsedAmount,
-        category: category.trim(),
-        date,
-        note: note.trim(),
-      };
+      const cleanCategory = category.trim();
+      const cleanNote = note.trim();
 
       if (transaction) {
-        await api(`/transactions/${transaction._id}`, { method: "PUT", body });
+        await api(`/transactions/${transaction._id}`, {
+          method: "PUT",
+          body: { type, amount: parsedAmount, category: cleanCategory, date, note: cleanNote },
+        });
+      } else if (repeat !== "none") {
+        await api("/recurring", {
+          method: "POST",
+          body: {
+            type,
+            amount: parsedAmount,
+            category: cleanCategory,
+            note: cleanNote,
+            frequency: repeat,
+            startDate: date,
+          },
+        });
       } else {
-        await api("/transactions", { method: "POST", body });
+        await api("/transactions", {
+          method: "POST",
+          body: { type, amount: parsedAmount, category: cleanCategory, date, note: cleanNote },
+        });
       }
 
       onSaved();
@@ -107,6 +129,7 @@ function ModalContent({ transaction, onClose, onSaved }: ModalContentProps) {
   }
 
   const suggestions = type === "income" ? incomeCategories : expenseCategories;
+  const repeating = !isEdit && repeat !== "none";
 
   return (
     <motion.div
@@ -126,7 +149,7 @@ function ModalContent({ transaction, onClose, onSaved }: ModalContentProps) {
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 24, scale: 0.97 }}
         transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-        className="relative w-full max-w-md rounded-2xl border border-border bg-surface p-6 shadow-2xl"
+        className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-border bg-surface p-6 shadow-2xl"
       >
         <div className="flex items-start justify-between">
           <h2 id="transaction-modal-title" className="font-display text-3xl">
@@ -141,6 +164,12 @@ function ModalContent({ transaction, onClose, onSaved }: ModalContentProps) {
             <X size={18} />
           </button>
         </div>
+
+        {isEdit && transaction?.recurringId && (
+          <p className="mt-2 text-xs text-muted">
+            This entry was added by a repeating transaction. Changes here only affect this one.
+          </p>
+        )}
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-5">
           <div className="grid grid-cols-2 rounded-full border border-border bg-background p-1">
@@ -212,9 +241,57 @@ function ModalContent({ transaction, onClose, onSaved }: ModalContentProps) {
             ))}
           </datalist>
 
+          {!isEdit && (
+            <div>
+              <p className="mb-1.5 text-sm font-medium text-ink">Repeat</p>
+              <div className="grid grid-cols-3 rounded-full border border-border bg-background p-1">
+                {repeatOptions.map((option) => {
+                  const active = option.key === repeat;
+
+                  return (
+                    <button
+                      key={option.key}
+                      type="button"
+                      onClick={() => setRepeat(option.key)}
+                      className={`relative rounded-full py-2 text-sm font-medium transition-colors ${
+                        active ? "text-accent-ink" : "text-muted hover:text-ink"
+                      }`}
+                    >
+                      {active && (
+                        <motion.span
+                          layoutId="repeat-pill"
+                          className="absolute inset-0 rounded-full bg-accent"
+                          transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                        />
+                      )}
+                      <span className="relative">{option.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <AnimatePresence initial={false}>
+                {repeating && (
+                  <motion.p
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden text-xs leading-relaxed text-muted"
+                  >
+                    <span className="block pt-2">
+                      {repeat === "weekly"
+                        ? "Repeats every week from the start date. Dates in the past fill in the entries you missed."
+                        : "Repeats every month on the same day (days 29 to 31 use the 28th). Dates in the past fill in the entries you missed."}
+                    </span>
+                  </motion.p>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+
           <Field
             id="date"
-            label="Date"
+            label={repeating ? "Starts on" : "Date"}
             type="date"
             value={date}
             onChange={(event) => setDate(event.target.value)}
@@ -250,7 +327,13 @@ function ModalContent({ transaction, onClose, onSaved }: ModalContentProps) {
             disabled={submitting}
             className="w-full rounded-xl bg-accent py-3 font-semibold text-accent-ink transition hover:opacity-90 disabled:opacity-60"
           >
-            {submitting ? "Saving..." : isEdit ? "Save changes" : "Add transaction"}
+            {submitting
+              ? "Saving..."
+              : isEdit
+                ? "Save changes"
+                : repeating
+                  ? "Add repeating transaction"
+                  : "Add transaction"}
           </motion.button>
         </form>
       </motion.div>
