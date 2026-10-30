@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "motion/react";
 import { LogOut, Plus } from "lucide-react";
 import AppFooter from "../components/AppFooter";
@@ -66,10 +67,24 @@ export default function Dashboard() {
     setRefreshKey((key) => key + 1);
   }, []);
 
+  const handleLogoClick = useCallback(() => {
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
+  }, []);
+
   return (
     <div className="min-h-screen bg-background text-ink">
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background/85 px-4 py-3 backdrop-blur sm:px-6 sm:py-4">
-        <h1 className="font-display text-2xl sm:text-3xl">Spendly</h1>
+        <h1 className="font-display text-2xl sm:text-3xl">
+          <Link
+            to="/"
+            onClick={handleLogoClick}
+            aria-label="Spendly, back to the top of the dashboard"
+            className="transition hover:opacity-70"
+          >
+            Spendly
+          </Link>
+        </h1>
         <div className="flex items-center gap-2 sm:gap-3">
           <CurrencySelect />
           <ThemeToggle />
