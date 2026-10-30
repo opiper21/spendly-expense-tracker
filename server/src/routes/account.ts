@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import rateLimit from "express-rate-limit";
 import { User } from "../models/User";
 import { Transaction } from "../models/Transaction";
+import { RecurringRule } from "../models/RecurringRule";
 import { protect, AuthRequest } from "../middleware/auth";
 
 const router = Router();
@@ -39,6 +40,7 @@ router.delete("/", protect, deleteLimiter, async (req: AuthRequest, res: Respons
       }
     }
 
+    await RecurringRule.deleteMany({ user: user._id });
     await Transaction.deleteMany({ user: user._id });
     await User.deleteOne({ _id: user._id });
 

@@ -4,8 +4,11 @@ import cors from "cors";
 import helmet from "helmet";
 import mongoose from "mongoose";
 import { connectDB } from "./config/db";
+import { protect } from "./middleware/auth";
+import { runRecurring } from "./middleware/recurring";
 import accountRoutes from "./routes/account";
 import authRoutes from "./routes/auth";
+import recurringRoutes from "./routes/recurring";
 import transactionRoutes from "./routes/transactions";
 import summaryRoutes from "./routes/summary";
 
@@ -46,8 +49,9 @@ app.get("/api/health", (_req: Request, res: Response) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/account", accountRoutes);
-app.use("/api/transactions", transactionRoutes);
-app.use("/api/summary", summaryRoutes);
+app.use("/api/recurring", recurringRoutes);
+app.use("/api/transactions", protect, runRecurring, transactionRoutes);
+app.use("/api/summary", protect, runRecurring, summaryRoutes);
 
 async function start(): Promise<void> {
   try {
