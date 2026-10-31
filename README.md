@@ -17,11 +17,13 @@ Spendly is a full-stack expense and budget tracker. Log your income and spending
 - One-click demo: every visitor gets a private account with 36 sample transactions, which deletes itself after 24 hours
 - Sign up and log in with hashed passwords and JWT authentication
 - Add, edit and delete income and expense transactions (amount, category, date, note)
+- Repeating transactions: weekly or monthly, with missed dates filled in automatically
 - Summary of balance, total income, total expenses and spending by category
 - Animated donut chart and category breakdown
 - Date filters: this month, last 30 days, this year, all time and custom range
 - Currency switcher with 10 currencies, defaulting from the browser language
 - Light and dark themes
+- Show and hide password, delete account (confirmed by password) and a plain-language privacy page
 - Responsive layout with smooth, reduced-motion-friendly animations
 
 ## Tech stack
@@ -31,7 +33,7 @@ Spendly is a full-stack expense and budget tracker. Log your income and spending
 | Frontend | React, TypeScript, Vite, Tailwind CSS, Motion, Recharts |
 | Backend | Node.js, Express, TypeScript |
 | Database | MongoDB Atlas with Mongoose |
-| Auth | JWT, bcrypt |
+| Auth and security | JWT, bcrypt, Helmet, rate limiting |
 | Hosting | Vercel (client), Render (API), MongoDB Atlas (database) |
 
 ## How it works
@@ -41,6 +43,8 @@ Spendly is a full-stack expense and budget tracker. Log your income and spending
 3. A middleware verifies the token and every query is filtered by the user's id, so people only ever see their own data.
 4. The summary endpoint adds up income and expenses in the database with an aggregation, and the dashboard animates the results.
 5. Demo accounts are created on request with sample data and an expiry time. A MongoDB TTL index removes them after 24 hours, and the demo endpoint is rate limited per IP.
+6. Repeating transactions need no scheduler, which suits a free server that sleeps. When the dashboard requests data, the API first adds any entries that have come due. Each due item is claimed with an atomic update, so concurrent requests can never create duplicates.
+7. Login attempts are rate limited, counting only failures, and the API sends security headers and caps request sizes.
 
 ## API
 
@@ -50,10 +54,14 @@ Spendly is a full-stack expense and budget tracker. Log your income and spending
 | POST | `/api/auth/login` | Log in |
 | POST | `/api/auth/demo` | Start a private, self-expiring demo account |
 | GET | `/api/auth/me` | Get the current user |
+| DELETE | `/api/account` | Delete the account and all its data (password confirmed) |
 | GET | `/api/transactions` | List transactions (`from`, `to`, `type` filters) |
 | POST | `/api/transactions` | Add a transaction |
 | PUT | `/api/transactions/:id` | Edit a transaction |
 | DELETE | `/api/transactions/:id` | Delete a transaction |
+| GET | `/api/recurring` | List repeating transactions |
+| POST | `/api/recurring` | Create a repeating transaction (weekly or monthly) |
+| DELETE | `/api/recurring/:id` | Stop a repeating transaction |
 | GET | `/api/summary` | Balance, income, expenses and spending by category (`from`, `to` filters) |
 | GET | `/api/health` | Health check |
 
@@ -104,10 +112,10 @@ spendly/
 
 ## Roadmap
 
-- Forgot password and email confirmation on signup
-- Budgets per category and recurring transactions
+- Budgets per category with progress bars
 - CSV import and export
-- httpOnly cookie sessions and security headers
+- Forgot password and email confirmation on signup
+- httpOnly cookie sessions
 - Automated tests
 
 ## Author
