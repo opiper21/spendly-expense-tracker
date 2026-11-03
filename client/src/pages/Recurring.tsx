@@ -56,7 +56,7 @@ export default function Recurring() {
       })
       .catch((err: unknown) => {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Could not load repeating transactions");
+          setError(err instanceof Error ? err.message : "Could not load recurring transactions");
         }
       });
 
@@ -103,7 +103,7 @@ export default function Recurring() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
         >
-          <h1 className="mt-6 font-display text-5xl">Repeating</h1>
+          <h1 className="mt-6 font-display text-5xl">Recurring</h1>
           <p className="mt-2 text-muted">
             Rent, salary, subscriptions. Set it once and Spendly adds it for you.
           </p>
@@ -121,9 +121,10 @@ export default function Recurring() {
                 <span className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-muted text-muted">
                   <Repeat size={22} />
                 </span>
-                <p className="mt-4 font-display text-2xl">Nothing repeats yet</p>
+                <p className="mt-4 font-display text-2xl">Nothing recurring yet</p>
                 <p className="mt-1 max-w-sm text-sm text-muted">
-                  On the dashboard, tap Add transaction and choose Weekly or Monthly under Repeat.
+                  On the dashboard, tap Add transaction and choose Weekly or Monthly under
+                  Recurring.
                 </p>
                 <Link
                   to="/"
@@ -199,7 +200,7 @@ export default function Recurring() {
                             <button
                               type="button"
                               onClick={() => setConfirmingId(rule._id)}
-                              aria-label={`Stop repeating ${rule.category}`}
+                              aria-label={`Stop recurring ${rule.category}`}
                               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted transition hover:bg-background hover:text-expense"
                             >
                               <Trash2 size={15} />
@@ -216,7 +217,7 @@ export default function Recurring() {
 
           {rules !== null && rules.length > 0 && (
             <p className="mt-6 text-xs text-muted">
-              Stopping a repeating transaction only prevents new entries. The ones already added
+              Stopping a recurring transaction only prevents new entries. The ones already added
               stay in your history.
             </p>
           )}

@@ -10,7 +10,7 @@ export default function AppFooter() {
       <nav className="flex flex-wrap items-center gap-5">
         {user && (
           <Link to="/recurring" className="transition hover:text-ink">
-            Repeating
+            Recurring
           </Link>
         )}
         <Link to="/privacy" className="transition hover:text-ink">

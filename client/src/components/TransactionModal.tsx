@@ -167,7 +167,7 @@ function ModalContent({ transaction, onClose, onSaved }: ModalContentProps) {
 
         {isEdit && transaction?.recurringId && (
           <p className="mt-2 text-xs text-muted">
-            This entry was added by a repeating transaction. Changes here only affect this one.
+            This entry was added by a recurring transaction. Changes here only affect this one.
           </p>
         )}
 
@@ -243,7 +243,7 @@ function ModalContent({ transaction, onClose, onSaved }: ModalContentProps) {
 
           {!isEdit && (
             <div>
-              <p className="mb-1.5 text-sm font-medium text-ink">Repeat</p>
+              <p className="mb-1.5 text-sm font-medium text-ink">Recurring</p>
               <div className="grid grid-cols-3 rounded-full border border-border bg-background p-1">
                 {repeatOptions.map((option) => {
                   const active = option.key === repeat;
@@ -280,8 +280,8 @@ function ModalContent({ transaction, onClose, onSaved }: ModalContentProps) {
                   >
                     <span className="block pt-2">
                       {repeat === "weekly"
-                        ? "Repeats every week from the start date. Dates in the past fill in the entries you missed."
-                        : "Repeats every month on the same day (days 29 to 31 use the 28th). Dates in the past fill in the entries you missed."}
+                        ? "Added automatically every week, starting on the date below. Past dates fill in the entries you missed."
+                        : "Added automatically every month on the same day (days 29 to 31 use the 28th). Past dates fill in the entries you missed."}
                     </span>
                   </motion.p>
                 )}
@@ -332,7 +332,7 @@ function ModalContent({ transaction, onClose, onSaved }: ModalContentProps) {
               : isEdit
                 ? "Save changes"
                 : repeating
-                  ? "Add repeating transaction"
+                  ? "Add recurring transaction"
                   : "Add transaction"}
           </motion.button>
         </form>

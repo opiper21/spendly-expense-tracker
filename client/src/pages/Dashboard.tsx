@@ -14,7 +14,7 @@ import TransactionModal from "../components/TransactionModal";
 import { useAuth } from "../context/authContext";
 import { useSummary } from "../hooks/useSummary";
 import { useTransactions } from "../hooks/useTransactions";
-import { getRange } from "../lib/dates";
+import { currentMonthValue, getRange } from "../lib/dates";
 import type { RangePreset } from "../lib/dates";
 import type { Transaction } from "../types";
 
@@ -30,13 +30,14 @@ export default function Dashboard() {
   const [preset, setPreset] = useState<RangePreset>(user?.isDemo ? "30d" : "month");
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
+  const [pickedMonth, setPickedMonth] = useState<string>(currentMonthValue);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Transaction | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const range = useMemo(
-    () => getRange(preset, customFrom, customTo),
-    [preset, customFrom, customTo]
+    () => getRange(preset, customFrom, customTo, pickedMonth),
+    [preset, customFrom, customTo, pickedMonth]
   );
 
   const { summary, loading, error } = useSummary(range, refreshKey);
@@ -121,7 +122,7 @@ export default function Dashboard() {
               className="flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2.5 text-sm font-medium transition hover:bg-surface-muted"
             >
               <Repeat size={16} />
-              Repeating
+              Recurring
             </Link>
 
             <motion.button
@@ -140,9 +141,11 @@ export default function Dashboard() {
           preset={preset}
           customFrom={customFrom}
           customTo={customTo}
+          pickedMonth={pickedMonth}
           onPresetChange={setPreset}
           onCustomFromChange={setCustomFrom}
           onCustomToChange={setCustomTo}
+          onPickedMonthChange={setPickedMonth}
         />
 
         {(error || transactionsError) && (

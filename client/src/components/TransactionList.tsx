@@ -1,17 +1,37 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowDownLeft, ArrowUpRight, Pencil, Receipt, Repeat, Trash2 } from "lucide-react";
+import {
+  ArrowDownLeft,
+  ArrowUpDown,
+  ArrowUpRight,
+  ListFilter,
+  Pencil,
+  Receipt,
+  Repeat,
+  Trash2,
+} from "lucide-react";
+import SelectMenu from "./SelectMenu";
 import { useCurrency } from "../context/currencyContext";
 import { api } from "../lib/api";
 import { formatDate } from "../lib/dates";
 import type { Transaction } from "../types";
 
 type TypeFilter = "all" | "income" | "expense";
+type SortOption = "newest" | "oldest" | "highest" | "lowest";
+
+const ALL_CATEGORIES = "__all__";
 
 const filters: { key: TypeFilter; label: string }[] = [
   { key: "all", label: "All" },
   { key: "income", label: "Income" },
   { key: "expense", label: "Expenses" },
+];
+
+const sortOptions: { value: SortOption; label: string }[] = [
+  { value: "newest", label: "Newest first" },
+  { value: "oldest", label: "Oldest first" },
+  { value: "highest", label: "Highest amount" },
+  { value: "lowest", label: "Lowest amount" },
 ];
 
 interface TransactionListProps {
@@ -44,14 +64,51 @@ export default function TransactionList({
 }: TransactionListProps) {
   const { format } = useCurrency();
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
+  const [category, setCategory] = useState<string>(ALL_CATEGORIES);
+  const [sort, setSort] = useState<SortOption>("newest");
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [actionError, setActionError] = useState("");
 
+  const categories = Array.from(new Set(transactions.map((item) => item.category))).sort(
+    (a, b) => a.localeCompare(b)
+  );
+  const activeCategory =
+    category !== ALL_CATEGORIES && categories.includes(category) ? category : ALL_CATEGORIES;
+
+  const categoryOptions = [
+    { value: ALL_CATEGORIES, label: "All categories" },
+    ...categories.map((name) => ({ value: name, label: name })),
+  ];
+
+  const filtered = transactions.filter(
+    (item) =>
+      (typeFilter === "all" || item.type === typeFilter) &&
+      (activeCategory === ALL_CATEGORIES || item.category === activeCategory)
+  );
+
   const visible =
-    typeFilter === "all"
-      ? transactions
-      : transactions.filter((item) => item.type === typeFilter);
+    sort === "newest"
+      ? filtered
+      : [...filtered].sort((a, b) => {
+          switch (sort) {
+            case "oldest":
+              return new Date(a.date).getTime() - new Date(b.date).getTime();
+            case "highest":
+              return b.amount - a.amount;
+            case "lowest":
+              return a.amount - b.amount;
+            default:
+              return new Date(b.date).getTime() - new Date(a.date).getTime();
+          }
+        });
+
+  const hasActiveFilters = typeFilter !== "all" || activeCategory !== ALL_CATEGORIES;
+
+  function clearFilters() {
+    setTypeFilter("all");
+    setCategory(ALL_CATEGORIES);
+  }
 
   async function handleDelete(id: string) {
     setActionError("");
@@ -114,6 +171,27 @@ export default function TransactionList({
         </div>
       </div>
 
+      {hasLoaded && transactions.length > 0 && (
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <SelectMenu
+            label="Category"
+            value={activeCategory}
+            options={categoryOptions}
+            onChange={setCategory}
+            icon={<ListFilter size={15} />}
+            align="left"
+          />
+          <SelectMenu
+            label="Sort"
+            value={sort}
+            options={sortOptions}
+            onChange={(value) => setSort(value as SortOption)}
+            icon={<ArrowUpDown size={15} />}
+            align="right"
+          />
+        </div>
+      )}
+
       {actionError && <p className="mt-3 text-sm text-expense">{actionError}</p>}
 
       <div className="mt-4 max-h-[36rem] overflow-y-auto">
@@ -125,15 +203,34 @@ export default function TransactionList({
             <SkeletonRow />
           </div>
         ) : visible.length === 0 ? (
-          <div className="flex h-64 flex-col items-center justify-center text-center">
-            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-muted text-muted">
-              <Receipt size={22} />
-            </span>
-            <p className="mt-4 font-display text-2xl">Nothing here yet</p>
-            <p className="mt-1 text-sm text-muted">
-              Transactions in this period will show up here.
-            </p>
-          </div>
+          hasActiveFilters && transactions.length > 0 ? (
+            <div className="flex h-64 flex-col items-center justify-center text-center">
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-muted text-muted">
+                <ListFilter size={22} />
+              </span>
+              <p className="mt-4 font-display text-2xl">No matches</p>
+              <p className="mt-1 text-sm text-muted">
+                No transactions match these filters in this period.
+              </p>
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="mt-5 rounded-full border border-border px-4 py-2 text-sm font-medium transition hover:bg-surface-muted"
+              >
+                Clear filters
+              </button>
+            </div>
+          ) : (
+            <div className="flex h-64 flex-col items-center justify-center text-center">
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-muted text-muted">
+                <Receipt size={22} />
+              </span>
+              <p className="mt-4 font-display text-2xl">Nothing here yet</p>
+              <p className="mt-1 text-sm text-muted">
+                Transactions in this period will show up here.
+              </p>
+            </div>
+          )
         ) : (
           <ul>
             <AnimatePresence mode="popLayout">
@@ -165,11 +262,11 @@ export default function TransactionList({
                         <span className="truncate">{item.category}</span>
                         {item.recurringId && (
                           <span
-                            title="Added automatically by a repeating transaction"
+                            title="Added automatically by a recurring transaction"
                             className="shrink-0 text-muted"
                           >
                             <Repeat size={13} aria-hidden="true" />
-                            <span className="sr-only">Repeating</span>
+                            <span className="sr-only">Recurring</span>
                           </span>
                         )}
                       </p>
