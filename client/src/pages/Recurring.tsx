@@ -4,8 +4,8 @@ import { AnimatePresence, motion } from "motion/react";
 import { ArrowLeft, Repeat, Trash2 } from "lucide-react";
 import AppFooter from "../components/AppFooter";
 import ThemeToggle from "../components/ThemeToggle";
-import { useCurrency } from "../context/currencyContext";
 import { api } from "../lib/api";
+import { formatMoney } from "../lib/currency";
 import { formatDate } from "../lib/dates";
 import type { RecurringRule } from "../types";
 
@@ -41,7 +41,6 @@ function describe(rule: RecurringRule): string {
 }
 
 export default function Recurring() {
-  const { format } = useCurrency();
   const [rules, setRules] = useState<RecurringRule[] | null>(null);
   const [error, setError] = useState("");
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
@@ -195,7 +194,7 @@ export default function Recurring() {
                               }`}
                             >
                               {isIncome ? "+" : "-"}
-                              {format(rule.amount)}
+                              {formatMoney(rule.amount, rule.currency)}
                             </p>
                             <button
                               type="button"

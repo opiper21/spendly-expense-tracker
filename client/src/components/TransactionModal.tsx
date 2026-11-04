@@ -3,8 +3,10 @@ import type { FormEvent } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { X } from "lucide-react";
 import Field from "./Field";
+import SelectMenu from "./SelectMenu";
 import { useCurrency } from "../context/currencyContext";
 import { api } from "../lib/api";
+import { currencies } from "../lib/currency";
 import { toISODate } from "../lib/dates";
 import type { RecurringFrequency, Transaction, TransactionType } from "../types";
 
@@ -35,18 +37,24 @@ const repeatOptions: { key: RepeatOption; label: string }[] = [
   { key: "monthly", label: "Monthly" },
 ];
 
+const currencyOptions = currencies.map((item) => ({
+  value: item.code,
+  label: `${item.code} · ${item.label}`,
+}));
+
 interface ModalContentProps {
   transaction: Transaction | null;
   onClose: () => void;
-  onSaved: () => void;
+  onSaved: (currency: string) => void;
 }
 
 function ModalContent({ transaction, onClose, onSaved }: ModalContentProps) {
-  const { currency } = useCurrency();
+  const { currency: viewCurrency } = useCurrency();
   const isEdit = transaction !== null;
 
   const [type, setType] = useState<TransactionType>(transaction?.type ?? "expense");
   const [amount, setAmount] = useState(transaction ? String(transaction.amount) : "");
+  const [currencyCode, setCurrencyCode] = useState<string>(transaction?.currency ?? viewCurrency);
   const [category, setCategory] = useState(transaction?.category ?? "");
   const [date, setDate] = useState(
     transaction ? transaction.date.slice(0, 10) : toISODate(new Date())
@@ -100,7 +108,14 @@ function ModalContent({ transaction, onClose, onSaved }: ModalContentProps) {
       if (transaction) {
         await api(`/transactions/${transaction._id}`, {
           method: "PUT",
-          body: { type, amount: parsedAmount, category: cleanCategory, date, note: cleanNote },
+          body: {
+            type,
+            amount: parsedAmount,
+            currency: currencyCode,
+            category: cleanCategory,
+            date,
+            note: cleanNote,
+          },
         });
       } else if (repeat !== "none") {
         await api("/recurring", {
@@ -108,6 +123,7 @@ function ModalContent({ transaction, onClose, onSaved }: ModalContentProps) {
           body: {
             type,
             amount: parsedAmount,
+            currency: currencyCode,
             category: cleanCategory,
             note: cleanNote,
             frequency: repeat,
@@ -117,11 +133,18 @@ function ModalContent({ transaction, onClose, onSaved }: ModalContentProps) {
       } else {
         await api("/transactions", {
           method: "POST",
-          body: { type, amount: parsedAmount, category: cleanCategory, date, note: cleanNote },
+          body: {
+            type,
+            amount: parsedAmount,
+            currency: currencyCode,
+            category: cleanCategory,
+            date,
+            note: cleanNote,
+          },
         });
       }
 
-      onSaved();
+      onSaved(currencyCode);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setSubmitting(false);
@@ -204,10 +227,15 @@ function ModalContent({ transaction, onClose, onSaved }: ModalContentProps) {
             <label htmlFor="amount" className="mb-1.5 block text-sm font-medium text-ink">
               Amount
             </label>
-            <div className="relative">
-              <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-medium text-muted">
-                {currency}
-              </span>
+            <div className="flex items-center gap-2">
+              <SelectMenu
+                label="Currency"
+                value={currencyCode}
+                options={currencyOptions}
+                onChange={setCurrencyCode}
+                getTriggerLabel={(option) => option.value}
+                align="left"
+              />
               <input
                 id="amount"
                 type="number"
@@ -219,7 +247,7 @@ function ModalContent({ transaction, onClose, onSaved }: ModalContentProps) {
                 placeholder="0.00"
                 autoFocus
                 required
-                className="w-full rounded-xl border border-border bg-surface py-2.5 pl-14 pr-3.5 text-ink outline-none transition placeholder:text-muted focus:border-accent focus:ring-4 focus:ring-accent/15"
+                className="min-w-0 flex-1 rounded-xl border border-border bg-surface px-3.5 py-2.5 text-ink outline-none transition placeholder:text-muted focus:border-accent focus:ring-4 focus:ring-accent/15"
               />
             </div>
           </div>
@@ -345,7 +373,7 @@ interface TransactionModalProps {
   open: boolean;
   transaction: Transaction | null;
   onClose: () => void;
-  onSaved: () => void;
+  onSaved: (currency: string) => void;
 }
 
 export default function TransactionModal({

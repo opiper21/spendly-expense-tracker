@@ -15,9 +15,17 @@ export const currencies: CurrencyOption[] = [
   { code: "ZAR", label: "South African Rand", locale: "en-ZA" },
   { code: "KES", label: "Kenyan Shilling", locale: "en-KE" },
   { code: "GHS", label: "Ghanaian Cedi", locale: "en-GH" },
+  { code: "KRW", label: "South Korean Won", locale: "en-US" },
+  { code: "JPY", label: "Japanese Yen", locale: "en-US" },
+  { code: "CNY", label: "Chinese Yuan", locale: "en-US" },
+  { code: "AED", label: "UAE Dirham", locale: "en-US" },
+  { code: "BRL", label: "Brazilian Real", locale: "en-US" },
+  { code: "CHF", label: "Swiss Franc", locale: "en-US" },
 ];
 
 const STORAGE_KEY = "spendly_currency";
+
+const zeroDecimalCurrencies = ["KRW", "JPY"];
 
 const regionCurrency: Record<string, string> = {
   US: "USD",
@@ -29,6 +37,12 @@ const regionCurrency: Record<string, string> = {
   ZA: "ZAR",
   KE: "KES",
   GH: "GHS",
+  KR: "KRW",
+  JP: "JPY",
+  CN: "CNY",
+  AE: "AED",
+  BR: "BRL",
+  CH: "CHF",
   DE: "EUR",
   FR: "EUR",
   ES: "EUR",
@@ -48,11 +62,13 @@ export function formatMoney(value: number, code: string): string {
 
   if (!formatter) {
     const option = currencies.find((item) => item.code === code) ?? currencies[0];
+    const digits = zeroDecimalCurrencies.includes(option.code) ? 0 : 2;
+
     formatter = new Intl.NumberFormat(option.locale, {
       style: "currency",
       currency: option.code,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits,
     });
     formatters.set(code, formatter);
   }

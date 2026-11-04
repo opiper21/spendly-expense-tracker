@@ -15,6 +15,7 @@ interface SelectMenuProps {
   onChange: (value: string) => void;
   icon?: ReactNode;
   align?: "left" | "right";
+  getTriggerLabel?: (option: SelectOption) => string;
 }
 
 export default function SelectMenu({
@@ -24,6 +25,7 @@ export default function SelectMenu({
   onChange,
   icon,
   align = "left",
+  getTriggerLabel,
 }: SelectMenuProps) {
   const baseId = useId();
   const [open, setOpen] = useState(false);
@@ -105,6 +107,8 @@ export default function SelectMenu({
     }
   }
 
+  const triggerText = selected ? (getTriggerLabel ? getTriggerLabel(selected) : selected.label) : "";
+
   return (
     <div ref={containerRef} className="relative min-w-0">
       <button
@@ -123,7 +127,7 @@ export default function SelectMenu({
         className="flex h-9 max-w-full items-center gap-2 rounded-full border border-border bg-background px-3 text-sm font-medium transition hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-accent/15"
       >
         {icon && <span className="shrink-0 text-muted">{icon}</span>}
-        <span className="truncate">{selected?.label}</span>
+        <span className="truncate">{triggerText}</span>
         <ChevronDown
           size={16}
           className={`shrink-0 text-muted transition-transform duration-200 ${

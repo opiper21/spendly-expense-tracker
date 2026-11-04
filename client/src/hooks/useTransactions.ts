@@ -9,8 +9,8 @@ interface TransactionsResult {
   error: string;
 }
 
-export function useTransactions(range: DateRange, refreshKey = 0) {
-  const key = `${range.from}|${range.to}|${refreshKey}`;
+export function useTransactions(range: DateRange, currency: string, refreshKey = 0) {
+  const key = `${range.from}|${range.to}|${currency}|${refreshKey}`;
   const [result, setResult] = useState<TransactionsResult | null>(null);
 
   useEffect(() => {
@@ -19,11 +19,9 @@ export function useTransactions(range: DateRange, refreshKey = 0) {
     const params = new URLSearchParams();
     if (range.from) params.set("from", range.from);
     if (range.to) params.set("to", range.to);
-    const query = params.toString();
+    params.set("currency", currency);
 
-    api<{ count: number; transactions: Transaction[] }>(
-      `/transactions${query ? `?${query}` : ""}`
-    )
+    api<{ count: number; transactions: Transaction[] }>(`/transactions?${params.toString()}`)
       .then((data) => {
         if (!cancelled) setResult({ key, transactions: data.transactions, error: "" });
       })
@@ -40,7 +38,7 @@ export function useTransactions(range: DateRange, refreshKey = 0) {
     return () => {
       cancelled = true;
     };
-  }, [key, range.from, range.to]);
+  }, [key, range.from, range.to, currency]);
 
   const loading = result === null || result.key !== key;
 

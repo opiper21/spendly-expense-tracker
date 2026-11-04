@@ -4,6 +4,7 @@ import { motion } from "motion/react";
 import { LogOut, Plus, Repeat } from "lucide-react";
 import AppFooter from "../components/AppFooter";
 import CategoryChart from "../components/CategoryChart";
+import CurrencyHint from "../components/CurrencyHint";
 import CurrencySelect from "../components/CurrencySelect";
 import DateFilter from "../components/DateFilter";
 import DemoBanner from "../components/DemoBanner";
@@ -12,6 +13,7 @@ import ThemeToggle from "../components/ThemeToggle";
 import TransactionList from "../components/TransactionList";
 import TransactionModal from "../components/TransactionModal";
 import { useAuth } from "../context/authContext";
+import { useCurrency } from "../context/currencyContext";
 import { useSummary } from "../hooks/useSummary";
 import { useTransactions } from "../hooks/useTransactions";
 import { currentMonthValue, getRange } from "../lib/dates";
@@ -27,6 +29,7 @@ function getGreeting(): string {
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
+  const { currency, setCurrency } = useCurrency();
   const [preset, setPreset] = useState<RangePreset>(user?.isDemo ? "30d" : "month");
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
@@ -40,13 +43,13 @@ export default function Dashboard() {
     [preset, customFrom, customTo, pickedMonth]
   );
 
-  const { summary, loading, error } = useSummary(range, refreshKey);
+  const { summary, loading, error } = useSummary(range, currency, refreshKey);
   const {
     transactions,
     loading: transactionsLoading,
     hasLoaded,
     error: transactionsError,
-  } = useTransactions(range, refreshKey);
+  } = useTransactions(range, currency, refreshKey);
   const firstName = user?.name.split(" ")[0] ?? "";
 
   const handleAdd = useCallback(() => {
@@ -63,10 +66,16 @@ export default function Dashboard() {
 
   const handleChanged = useCallback(() => setRefreshKey((key) => key + 1), []);
 
-  const handleSaved = useCallback(() => {
-    setModalOpen(false);
-    setRefreshKey((key) => key + 1);
-  }, []);
+  const handleSaved = useCallback(
+    (savedCurrency: string) => {
+      setModalOpen(false);
+      setRefreshKey((key) => key + 1);
+      if (savedCurrency !== currency) {
+        setCurrency(savedCurrency);
+      }
+    },
+    [currency, setCurrency]
+  );
 
   const handleLogoClick = useCallback(() => {
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -137,16 +146,20 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <DateFilter
-          preset={preset}
-          customFrom={customFrom}
-          customTo={customTo}
-          pickedMonth={pickedMonth}
-          onPresetChange={setPreset}
-          onCustomFromChange={setCustomFrom}
-          onCustomToChange={setCustomTo}
-          onPickedMonthChange={setPickedMonth}
-        />
+        <div className="space-y-4">
+          <DateFilter
+            preset={preset}
+            customFrom={customFrom}
+            customTo={customTo}
+            pickedMonth={pickedMonth}
+            onPresetChange={setPreset}
+            onCustomFromChange={setCustomFrom}
+            onCustomToChange={setCustomTo}
+            onPickedMonthChange={setPickedMonth}
+          />
+
+          <CurrencyHint summary={summary} onSwitch={setCurrency} />
+        </div>
 
         {(error || transactionsError) && (
           <p className="text-sm text-expense">{error || transactionsError}</p>

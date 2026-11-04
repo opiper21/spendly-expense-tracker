@@ -113,7 +113,8 @@ export default function CurrencySelect() {
         }}
         aria-haspopup="listbox"
         aria-expanded={open}
-        aria-label={`Currency: ${currency}`}
+        aria-label={`Viewing currency: ${currency}`}
+        title="Choose which currency to view"
         className="flex h-9 items-center gap-2 rounded-full border border-border bg-surface pl-1.5 pr-3 text-sm font-medium transition hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-accent/15"
       >
         <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-accent/10 px-1.5 text-xs font-semibold text-accent">
@@ -140,7 +141,7 @@ export default function CurrencySelect() {
             exit={{ opacity: 0, y: -8, scale: 0.97 }}
             transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
             style={{ transformOrigin: "top right" }}
-            className="absolute left-4 right-4 top-full z-40 mt-2 rounded-2xl border border-border bg-surface p-1.5 shadow-xl outline-none sm:left-auto sm:right-0 sm:w-64"
+            className="absolute left-4 right-4 top-full z-40 mt-2 max-h-80 overflow-y-auto rounded-2xl border border-border bg-surface p-1.5 shadow-xl outline-none sm:left-auto sm:right-0 sm:w-64"
           >
             {currencies.map((item, index) => {
               const selected = item.code === currency;

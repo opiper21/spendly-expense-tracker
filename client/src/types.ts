@@ -17,6 +17,7 @@ export interface Transaction {
   _id: string;
   type: TransactionType;
   amount: number;
+  currency: string;
   category: string;
   date: string;
   note: string;
@@ -29,6 +30,7 @@ export interface RecurringRule {
   _id: string;
   type: TransactionType;
   amount: number;
+  currency: string;
   category: string;
   note: string;
   frequency: RecurringFrequency;
@@ -44,7 +46,14 @@ export interface CategoryTotal {
   total: number;
 }
 
+export interface CurrencyCount {
+  currency: string;
+  count: number;
+}
+
 export interface Summary {
+  currency: string;
+  currencies: CurrencyCount[];
   balance: number;
   totalIncome: number;
   totalExpenses: number;

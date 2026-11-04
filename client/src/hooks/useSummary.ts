@@ -9,8 +9,8 @@ interface SummaryResult {
   error: string;
 }
 
-export function useSummary(range: DateRange, refreshKey = 0) {
-  const key = `${range.from}|${range.to}|${refreshKey}`;
+export function useSummary(range: DateRange, currency: string, refreshKey = 0) {
+  const key = `${range.from}|${range.to}|${currency}|${refreshKey}`;
   const [result, setResult] = useState<SummaryResult | null>(null);
 
   useEffect(() => {
@@ -19,9 +19,9 @@ export function useSummary(range: DateRange, refreshKey = 0) {
     const params = new URLSearchParams();
     if (range.from) params.set("from", range.from);
     if (range.to) params.set("to", range.to);
-    const query = params.toString();
+    params.set("currency", currency);
 
-    api<Summary>(`/summary${query ? `?${query}` : ""}`)
+    api<Summary>(`/summary?${params.toString()}`)
       .then((summary) => {
         if (!cancelled) setResult({ key, summary, error: "" });
       })
@@ -38,7 +38,7 @@ export function useSummary(range: DateRange, refreshKey = 0) {
     return () => {
       cancelled = true;
     };
-  }, [key, range.from, range.to]);
+  }, [key, range.from, range.to, currency]);
 
   const loading = result === null || result.key !== key;
 
