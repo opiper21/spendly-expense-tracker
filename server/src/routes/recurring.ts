@@ -3,6 +3,7 @@ import { isValidObjectId } from "mongoose";
 import { RecurringRule } from "../models/RecurringRule";
 import { User } from "../models/User";
 import { protect, AuthRequest } from "../middleware/auth";
+import { DEFAULT_CURRENCY, isSupportedCurrency } from "../lib/currencies";
 import { startOfTodayUTC, syncRecurring } from "../lib/recurring";
 
 const router = Router();
@@ -23,13 +24,15 @@ router.get("/", async (req: AuthRequest, res: Response) => {
 
 router.post("/", async (req: AuthRequest, res: Response) => {
   try {
-    const { type, amount, category, note, frequency, startDate } = (req.body ?? {}) as {
+    const { type, amount, category, note, frequency, startDate, currency } = (req.body ??
+      {}) as {
       type?: string;
       amount?: number;
       category?: string;
       note?: string;
       frequency?: string;
       startDate?: string;
+      currency?: string;
     };
 
     if (type !== "income" && type !== "expense") {
@@ -50,6 +53,15 @@ router.post("/", async (req: AuthRequest, res: Response) => {
     if (!category || !category.trim()) {
       res.status(400).json({ message: "Category is required" });
       return;
+    }
+
+    let currencyCode: string = DEFAULT_CURRENCY;
+    if (currency !== undefined) {
+      if (!isSupportedCurrency(currency)) {
+        res.status(400).json({ message: "Currency is not supported" });
+        return;
+      }
+      currencyCode = currency;
     }
 
     if (typeof startDate !== "string") {
@@ -81,7 +93,7 @@ router.post("/", async (req: AuthRequest, res: Response) => {
 
     const count = await RecurringRule.countDocuments({ user: req.userId });
     if (count >= MAX_RULES) {
-      res.status(400).json({ message: `You can have up to ${MAX_RULES} repeating transactions` });
+      res.status(400).json({ message: `You can have up to ${MAX_RULES} recurring transactions` });
       return;
     }
 
@@ -91,6 +103,7 @@ router.post("/", async (req: AuthRequest, res: Response) => {
       user: req.userId,
       type,
       amount,
+      currency: currencyCode,
       category,
       note: note ?? "",
       frequency,
@@ -121,11 +134,11 @@ router.delete("/:id", async (req: AuthRequest, res: Response) => {
     const rule = await RecurringRule.findOneAndDelete({ _id: id, user: req.userId });
 
     if (!rule) {
-      res.status(404).json({ message: "Repeating transaction not found" });
+      res.status(404).json({ message: "Recurring transaction not found" });
       return;
     }
 
-    res.json({ message: "Repeating transaction deleted" });
+    res.json({ message: "Recurring transaction deleted" });
   } catch (error) {
     console.error("Delete recurring error:", error);
     res.status(500).json({ message: "Server error" });

@@ -2,6 +2,7 @@ import { Router, Response } from "express";
 import { Types } from "mongoose";
 import { Transaction, TransactionType } from "../models/Transaction";
 import { protect, AuthRequest } from "../middleware/auth";
+import { DEFAULT_CURRENCY, isSupportedCurrency } from "../lib/currencies";
 
 const router = Router();
 
@@ -10,6 +11,11 @@ router.use(protect);
 interface GroupRow {
   _id: { type: TransactionType; category: string };
   total: number;
+  count: number;
+}
+
+interface CurrencyRow {
+  _id: string | null;
   count: number;
 }
 
@@ -30,12 +36,28 @@ function round2(value: number): number {
 
 router.get("/", async (req: AuthRequest, res: Response) => {
   try {
-    const { from, to } = req.query as { from?: string; to?: string };
+    const { from, to, currency } = req.query as {
+      from?: string;
+      to?: string;
+      currency?: string;
+    };
+
+    let currencyCode: string = DEFAULT_CURRENCY;
+    if (currency !== undefined) {
+      if (!isSupportedCurrency(currency)) {
+        res.status(400).json({ message: "Currency is not supported" });
+        return;
+      }
+      currencyCode = currency;
+    }
+
+    const userId = new Types.ObjectId(req.userId);
 
     const match: {
       user: Types.ObjectId;
+      currency: string;
       date?: { $gte?: Date; $lte?: Date };
-    } = { user: new Types.ObjectId(req.userId) };
+    } = { user: userId, currency: currencyCode };
 
     if (from || to) {
       const dateFilter: { $gte?: Date; $lte?: Date } = {};
@@ -62,15 +84,21 @@ router.get("/", async (req: AuthRequest, res: Response) => {
       match.date = dateFilter;
     }
 
-    const rows = await Transaction.aggregate<GroupRow>([
-      { $match: match },
-      {
-        $group: {
-          _id: { type: "$type", category: "$category" },
-          total: { $sum: "$amount" },
-          count: { $sum: 1 },
+    const [rows, currencyRows] = await Promise.all([
+      Transaction.aggregate<GroupRow>([
+        { $match: match },
+        {
+          $group: {
+            _id: { type: "$type", category: "$category" },
+            total: { $sum: "$amount" },
+            count: { $sum: 1 },
+          },
         },
-      },
+      ]),
+      Transaction.aggregate<CurrencyRow>([
+        { $match: { user: userId } },
+        { $group: { _id: "$currency", count: { $sum: 1 } } },
+      ]),
     ]);
 
     let totalIncome = 0;
@@ -91,7 +119,19 @@ router.get("/", async (req: AuthRequest, res: Response) => {
 
     spendingByCategory.sort((a, b) => b.total - a.total);
 
+    const counts = new Map<string, number>();
+    for (const row of currencyRows) {
+      const code = row._id ?? DEFAULT_CURRENCY;
+      counts.set(code, (counts.get(code) ?? 0) + row.count);
+    }
+
+    const currencies = Array.from(counts.entries())
+      .map(([code, count]) => ({ currency: code, count }))
+      .sort((a, b) => b.count - a.count);
+
     res.json({
+      currency: currencyCode,
+      currencies,
       balance: round2(totalIncome - totalExpenses),
       totalIncome: round2(totalIncome),
       totalExpenses: round2(totalExpenses),

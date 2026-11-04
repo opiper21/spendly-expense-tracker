@@ -2,6 +2,7 @@ import { Router, Response } from "express";
 import { isValidObjectId } from "mongoose";
 import { Transaction, TransactionType } from "../models/Transaction";
 import { protect, AuthRequest } from "../middleware/auth";
+import { DEFAULT_CURRENCY, isSupportedCurrency } from "../lib/currencies";
 
 const router = Router();
 
@@ -15,12 +16,13 @@ function parseDate(value: unknown): Date | null {
 
 router.post("/", async (req: AuthRequest, res: Response) => {
   try {
-    const { type, amount, category, date, note } = (req.body ?? {}) as {
+    const { type, amount, category, date, note, currency } = (req.body ?? {}) as {
       type?: string;
       amount?: number;
       category?: string;
       date?: string;
       note?: string;
+      currency?: string;
     };
 
     if (type !== "income" && type !== "expense") {
@@ -38,6 +40,15 @@ router.post("/", async (req: AuthRequest, res: Response) => {
       return;
     }
 
+    let currencyCode: string = DEFAULT_CURRENCY;
+    if (currency !== undefined) {
+      if (!isSupportedCurrency(currency)) {
+        res.status(400).json({ message: "Currency is not supported" });
+        return;
+      }
+      currencyCode = currency;
+    }
+
     let parsedDate = new Date();
     if (date !== undefined) {
       const checked = parseDate(date);
@@ -52,6 +63,7 @@ router.post("/", async (req: AuthRequest, res: Response) => {
       user: req.userId,
       type: type as TransactionType,
       amount,
+      currency: currencyCode,
       category,
       date: parsedDate,
       note: note ?? "",
@@ -66,10 +78,11 @@ router.post("/", async (req: AuthRequest, res: Response) => {
 
 router.get("/", async (req: AuthRequest, res: Response) => {
   try {
-    const { from, to, type } = req.query as {
+    const { from, to, type, currency } = req.query as {
       from?: string;
       to?: string;
       type?: string;
+      currency?: string;
     };
 
     const filter: Record<string, unknown> = { user: req.userId };
@@ -80,6 +93,14 @@ router.get("/", async (req: AuthRequest, res: Response) => {
         return;
       }
       filter.type = type;
+    }
+
+    if (currency !== undefined) {
+      if (!isSupportedCurrency(currency)) {
+        res.status(400).json({ message: "Currency is not supported" });
+        return;
+      }
+      filter.currency = currency;
     }
 
     if (from || to) {
@@ -125,17 +146,19 @@ router.put("/:id", async (req: AuthRequest, res: Response) => {
       return;
     }
 
-    const { type, amount, category, date, note } = (req.body ?? {}) as {
+    const { type, amount, category, date, note, currency } = (req.body ?? {}) as {
       type?: string;
       amount?: number;
       category?: string;
       date?: string;
       note?: string;
+      currency?: string;
     };
 
     const updates: {
       type?: TransactionType;
       amount?: number;
+      currency?: string;
       category?: string;
       date?: Date;
       note?: string;
@@ -155,6 +178,14 @@ router.put("/:id", async (req: AuthRequest, res: Response) => {
         return;
       }
       updates.amount = amount;
+    }
+
+    if (currency !== undefined) {
+      if (!isSupportedCurrency(currency)) {
+        res.status(400).json({ message: "Currency is not supported" });
+        return;
+      }
+      updates.currency = currency;
     }
 
     if (category !== undefined) {

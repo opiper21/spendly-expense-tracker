@@ -49,6 +49,7 @@ export async function syncRecurring(userId: string): Promise<number> {
           user: rule.user,
           type: rule.type,
           amount: rule.amount,
+          currency: rule.currency,
           category: rule.category,
           note: rule.note,
           date: due,
