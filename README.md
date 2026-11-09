@@ -1,6 +1,6 @@
 # Spendly
 
-Spendly is a full-stack expense and budget tracker. Log your income and spending, and see your balance, where your money goes by category, and every transaction in one live dashboard.
+Spendly is a full-stack expense and budget tracker. Log your income and spending, in any of 16 currencies, and see your balance, where your money goes by category, and every transaction in one live dashboard.
 
 **Live demo:** https://spendly-expense-tracker-delta.vercel.app
 
@@ -16,12 +16,13 @@ Spendly is a full-stack expense and budget tracker. Log your income and spending
 
 - One-click demo: every visitor gets a private account with 36 sample transactions, which deletes itself after 24 hours
 - Sign up and log in with hashed passwords and JWT authentication
-- Add, edit and delete income and expense transactions (amount, category, date, note)
-- Repeating transactions: weekly or monthly, with missed dates filled in automatically
+- Add, edit and delete income and expense transactions (amount, currency, category, date, note)
+- Per-transaction currency: 16 currencies, one currency viewed at a time, and switching views never changes old entries
+- Recurring transactions: weekly or monthly, with missed dates filled in automatically
 - Summary of balance, total income, total expenses and spending by category
 - Animated donut chart and category breakdown
-- Date filters: this month, last 30 days, this year, all time and custom range
-- Currency switcher with 10 currencies, defaulting from the browser language
+- Date filters: this month, last 30 days, this year, by month (with a month stepper), all time and a custom range
+- Category filter and sorting on the transaction list
 - Light and dark themes
 - Show and hide password, delete account (confirmed by password) and a plain-language privacy page
 - Responsive layout with smooth, reduced-motion-friendly animations
@@ -42,9 +43,20 @@ Spendly is a full-stack expense and budget tracker. Log your income and spending
 2. The React app keeps the token and sends it with every request.
 3. A middleware verifies the token and every query is filtered by the user's id, so people only ever see their own data.
 4. The summary endpoint adds up income and expenses in the database with an aggregation, and the dashboard animates the results.
-5. Demo accounts are created on request with sample data and an expiry time. A MongoDB TTL index removes them after 24 hours, and the demo endpoint is rate limited per IP.
-6. Repeating transactions need no scheduler, which suits a free server that sleeps. When the dashboard requests data, the API first adds any entries that have come due. Each due item is claimed with an atomic update, so concurrent requests can never create duplicates.
-7. Login attempts are rate limited, counting only failures, and the API sends security headers and caps request sizes.
+5. Every transaction and recurring item stores its own currency code. The summary is calculated for one currency at a time and also reports which currencies the user has entries in, so the dashboard can offer quick switches without ever relabelling old data. Amounts are not converted between currencies.
+6. Demo accounts are created on request with sample data and an expiry time. A MongoDB TTL index removes them after 24 hours, and the demo endpoint is rate limited per IP.
+7. Recurring transactions need no scheduler, which suits a free server that sleeps. When the dashboard requests data, the API first adds any entries that have come due. Each due item is claimed with an atomic update, so concurrent requests can never create duplicates.
+8. Login attempts are rate limited, counting only failures, and the API sends security headers and caps request sizes.
+
+## Built from user feedback
+
+Real users have shaped the app. Feedback from testers led to:
+
+- Per-transaction currency, after a tester pointed out that changing the currency in other apps rewrites old data
+- A month stepper, a category filter and sorting
+- Clearer wording: "Recurring" instead of "Repeat"
+
+Another reviewer suggested storing money as integer minor units, which is on the roadmap below.
 
 ## API
 
@@ -55,14 +67,14 @@ Spendly is a full-stack expense and budget tracker. Log your income and spending
 | POST | `/api/auth/demo` | Start a private, self-expiring demo account |
 | GET | `/api/auth/me` | Get the current user |
 | DELETE | `/api/account` | Delete the account and all its data (password confirmed) |
-| GET | `/api/transactions` | List transactions (`from`, `to`, `type` filters) |
-| POST | `/api/transactions` | Add a transaction |
+| GET | `/api/transactions` | List transactions (`from`, `to`, `type`, `currency` filters) |
+| POST | `/api/transactions` | Add a transaction (with a `currency`) |
 | PUT | `/api/transactions/:id` | Edit a transaction |
 | DELETE | `/api/transactions/:id` | Delete a transaction |
-| GET | `/api/recurring` | List repeating transactions |
-| POST | `/api/recurring` | Create a repeating transaction (weekly or monthly) |
-| DELETE | `/api/recurring/:id` | Stop a repeating transaction |
-| GET | `/api/summary` | Balance, income, expenses and spending by category (`from`, `to` filters) |
+| GET | `/api/recurring` | List recurring transactions |
+| POST | `/api/recurring` | Create a recurring transaction (weekly or monthly) |
+| DELETE | `/api/recurring/:id` | Stop a recurring transaction |
+| GET | `/api/summary` | Balance, income, expenses and spending by category for one currency (`from`, `to`, `currency`), plus the currencies in use |
 | GET | `/api/health` | Health check |
 
 All routes except register, login, demo and health require a `Bearer` token.
@@ -90,6 +102,12 @@ Fill in `.env` with your MongoDB connection string and a long random `JWT_SECRET
 npm run dev
 ```
 
+If you have data from before per-transaction currency existed, label it once with:
+
+```bash
+npx tsx src/scripts/backfillCurrency.ts
+```
+
 **Client** (in a second terminal)
 
 ```bash
@@ -110,8 +128,17 @@ spendly/
   docs/     Screenshots
 ```
 
+## Known limitations
+
+- Amounts are stored as plain decimal numbers, so per-currency decimal rules are enforced only when displaying, not when storing
+- There is no currency conversion, so totals are per currency
+- Passwords cannot be reset by email yet
+- The free API tier sleeps when idle, so the first request can be slow
+
 ## Roadmap
 
+- Store money as integer minor units with per-currency decimal rules
+- Optional combined total in a home currency using exchange rates
 - Budgets per category with progress bars
 - CSV import and export
 - Forgot password and email confirmation on signup
