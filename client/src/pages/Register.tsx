@@ -5,7 +5,9 @@ import { AnimatePresence, motion } from "motion/react";
 import AuthLayout from "../components/AuthLayout";
 import DemoButton from "../components/DemoButton";
 import Field from "../components/Field";
+import WakingNotice from "../components/WakingNotice";
 import { useAuth } from "../context/authContext";
+import { useSlowFlag } from "../hooks/useSlowFlag";
 
 export default function Register() {
   const { user, register } = useAuth();
@@ -14,6 +16,7 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const slow = useSlowFlag(submitting);
 
   if (user) {
     return <Navigate to="/" replace />;
@@ -93,6 +96,8 @@ export default function Register() {
         >
           {submitting ? "Creating account..." : "Create account"}
         </motion.button>
+
+        {slow && <WakingNotice />}
       </form>
 
       <DemoButton />

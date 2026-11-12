@@ -1,6 +1,8 @@
+import { useEffect } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ScrollToTop from "./components/ScrollToTop";
+import { warmUpServer } from "./lib/api";
 import Account from "./pages/Account";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
@@ -9,6 +11,10 @@ import Recurring from "./pages/Recurring";
 import Register from "./pages/Register";
 
 export default function App() {
+  useEffect(() => {
+    warmUpServer();
+  }, []);
+
   return (
     <>
       <ScrollToTop />

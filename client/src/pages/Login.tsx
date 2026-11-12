@@ -5,7 +5,9 @@ import { AnimatePresence, motion } from "motion/react";
 import AuthLayout from "../components/AuthLayout";
 import DemoButton from "../components/DemoButton";
 import Field from "../components/Field";
+import WakingNotice from "../components/WakingNotice";
 import { useAuth } from "../context/authContext";
+import { useSlowFlag } from "../hooks/useSlowFlag";
 
 export default function Login() {
   const { user, login } = useAuth();
@@ -13,6 +15,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const slow = useSlowFlag(submitting);
 
   if (user) {
     return <Navigate to="/" replace />;
@@ -76,6 +79,8 @@ export default function Login() {
         >
           {submitting ? "Logging in..." : "Log in"}
         </motion.button>
+
+        {slow && <WakingNotice />}
       </form>
 
       <DemoButton />

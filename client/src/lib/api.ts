@@ -64,3 +64,11 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
 
   return data as T;
 }
+
+export function warmUpServer(): void {
+  if (!API_URL) return;
+
+  fetch(`${API_URL}/health`, { mode: "no-cors", cache: "no-store" }).catch(() => {
+    // the warm-up is best effort, so a failure here is ignored
+  });
+}
